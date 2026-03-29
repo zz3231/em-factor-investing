@@ -1,0 +1,14 @@
+Metric,Value
+EM Hedged Sharpe (OOS),0.828
+US Market Sharpe (OOS),0.835
+"Correlation (EM Hedged, US Mkt)",0.223
+Hurdle Sharpe,0.187
+Diversification Premium,0.642
+Pass Hurdle Sharpe,YES
+"US Alpha (ann bps, FF5+Mom)",306
+US Alpha t-stat,0.96
+US Alpha p-value,0.3367
+R² (US FF5+Mom),0.158
+Vol Reduction at 10% EM (%),9.1
+10% EM Portfolio SR,0.860
+10% EM Portfolio Return (ann %),14.26

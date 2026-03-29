@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .data_loader import FACTOR_DIRECTIONS, FACTOR_COLUMNS, SMALL_INDUSTRIES
+from .data_loader import FACTOR_COLUMNS, SMALL_INDUSTRIES
 from .factor_testing import compute_monthly_ic, compute_ic_summary
 from .factor_selection import (
     select_single_factor,
@@ -69,6 +69,9 @@ def compute_portfolio_return(
 ) -> float:
     """Compute weighted portfolio return for a single period.
 
+    Weights are re-normalized to sum to 1.0 after dropping stocks
+    with missing returns, so delistings are handled correctly.
+
     Parameters
     ----------
     holdings : pd.DataFrame
@@ -84,15 +87,48 @@ def compute_portfolio_return(
     valid = holdings.dropna(subset=["weight", return_col])
     if valid.empty:
         return np.nan
-    return float((valid["weight"] * valid[return_col]).sum())
+    w = valid["weight"]
+    w_sum = w.sum()
+    if w_sum == 0:
+        return np.nan
+    return float((w / w_sum * valid[return_col]).sum())
+
+
+def _compute_predictive_ic(
+    ind_df: pd.DataFrame,
+    factors: list[str],
+    return_col_testing: str,
+    date_col: str,
+    id_col: str,
+) -> dict[str, pd.Series]:
+    """Compute predictive IC: Corr(signal_t, return_{t+1}) per month.
+
+    This aligns with the portfolio timing convention where signal at *t*
+    predicts return earned at *t + 1*.
+    """
+    sorted_dates = sorted(ind_df[date_col].unique())
+    date_to_next = {sorted_dates[i]: sorted_dates[i + 1]
+                    for i in range(len(sorted_dates) - 1)}
+
+    fwd = ind_df[[id_col, date_col, return_col_testing]].copy()
+    fwd[date_col] = fwd[date_col].map(date_to_next)
+    fwd = fwd.dropna(subset=[date_col])
+    fwd = fwd.rename(columns={return_col_testing: "_fwd_ret"})
+
+    merged = ind_df.merge(fwd[[id_col, date_col, "_fwd_ret"]],
+                          on=[id_col, date_col], how="left")
+
+    ic_by_factor: dict[str, pd.Series] = {}
+    for fct in factors:
+        ic_df = compute_monthly_ic(merged, fct, "_fwd_ret", date_col, method="rank")
+        ic_by_factor[fct] = ic_df.set_index("ym")["ic"]
+    return ic_by_factor
 
 
 def backtest_single_factor(
     df: pd.DataFrame,
     industry: str,
     factors: list[str] | None = None,
-    factor_directions: dict[str, int] | None = None,
-    benchmark: pd.Series | None = None,
     window: int = 60,
     top_pct: float | None = None,
     return_col_testing: str = "mret_w",
@@ -104,7 +140,8 @@ def backtest_single_factor(
 
     At each month *t* (starting from month ``window + 1``):
 
-    1. Compute rolling ``window``-month IC for each candidate factor.
+    1. Compute rolling ``window``-month **predictive** IC for each factor
+       (Corr(signal_t, return_{t+1})).
     2. Select the best factor via |IC| with a 20% stability filter.
     3. Rank stocks by the selected factor (direction from sign of rolling IC).
     4. Select top quintile (or tercile for small industries), equal weight.
@@ -120,10 +157,6 @@ def backtest_single_factor(
         Industry label. Used to determine quintile/tercile threshold.
     factors : list[str], optional
         Candidate factor column names. Defaults to ``FACTOR_COLUMNS``.
-    factor_directions : dict[str, int], optional
-        Per-factor direction mapping. Defaults to ``FACTOR_DIRECTIONS``.
-    benchmark : pd.Series, optional
-        Benchmark return series (unused in this function but kept for API).
     window : int
         Number of trailing months for IC estimation.
     top_pct : float, optional
@@ -145,18 +178,15 @@ def backtest_single_factor(
     """
     if factors is None:
         factors = FACTOR_COLUMNS
-    if factor_directions is None:
-        factor_directions = FACTOR_DIRECTIONS
     if top_pct is None:
         top_pct = 0.33 if industry in SMALL_INDUSTRIES else 0.20
 
     ind_df = df.copy()
     sorted_dates = sorted(ind_df[date_col].unique())
 
-    ic_by_factor: dict[str, pd.Series] = {}
-    for fct in factors:
-        ic_df = compute_monthly_ic(ind_df, fct, return_col_testing, date_col, method="rank")
-        ic_by_factor[fct] = ic_df.set_index("ym")["ic"]
+    ic_by_factor = _compute_predictive_ic(
+        ind_df, factors, return_col_testing, date_col, id_col,
+    )
 
     records: list[dict] = []
     current_selected: str | None = None
@@ -285,12 +315,9 @@ def backtest_composite_factor(
     ind_df = df.copy()
     sorted_dates = sorted(ind_df[date_col].unique())
 
-    ic_by_factor: dict[str, pd.Series] = {}
-    for fct in factors:
-        ic_df = compute_monthly_ic(
-            ind_df, fct, return_col_testing, date_col, method="rank"
-        )
-        ic_by_factor[fct] = ic_df.set_index("ym")["ic"]
+    ic_by_factor = _compute_predictive_ic(
+        ind_df, factors, return_col_testing, date_col, id_col,
+    )
 
     records: list[dict] = []
     prev_holdings: dict[str, float] = {}
@@ -404,7 +431,6 @@ def backtest_all_industries(
             ind_df,
             industry=industry,
             factors=factors,
-            benchmark=benchmark,
             window=window,
             return_col_testing=return_col_testing,
             return_col_portfolio=return_col_portfolio,

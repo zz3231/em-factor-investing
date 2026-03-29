@@ -14,16 +14,17 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # Factor definitions
 # ---------------------------------------------------------------------------
-# Each entry: (column_name, display_name, expected_direction)
-# Direction: +1 means higher value predicts higher returns,
-#            -1 means lower value predicts higher returns
+# Each entry: (column_name, display_name, empirical_direction_in_EM)
+# Directions reflect empirical rolling IC signs observed in EM data
+# (NOT developed-market textbook priors). These are for documentation
+# only — the pipeline always uses dynamic rolling IC signs.
 FACTORS: dict[str, tuple[str, str, int]] = {
     "log_mktcap": ("log_mktcap", "Size", +1),
-    "pb_w": ("pb_w", "Value (P/B)", -1),
+    "pb_w": ("pb_w", "Value (P/B)", +1),       # Growth outperforms in EM
     "roe_w": ("roe_w", "Quality (ROE)", +1),
     "mom_11m_w": ("mom_11m_w", "Momentum", +1),
     "ret_vol_w": ("ret_vol_w", "Volatility", -1),
-    "div_yield_w": ("div_yield_w", "Dividend Yield", +1),
+    "div_yield_w": ("div_yield_w", "Dividend Yield", -1),  # High div underperforms in EM
 }
 
 FACTOR_COLUMNS: list[str] = list(FACTORS.keys())
@@ -39,6 +40,21 @@ SMALL_INDUSTRIES: set[str] = {"HLTHC", "RLEST"}
 
 RETURN_COL_TESTING: str = "mret_w"      # winsorized, for factor testing / IC
 RETURN_COL_PORTFOLIO: str = "mret_bbg"   # raw Bloomberg, for portfolio returns
+
+# Country-level round-trip transaction costs (bps) — Domowitz, Glen & Madhavan (2001)
+# These are conservative upper-bound estimates from the late 1990s.
+COUNTRY_TC_BPS: dict[str, int] = {
+    "BRAZIL": 60, "CHILE": 55, "CHINA": 50, "COLOMBIA": 60,
+    "CZECH REPUBLIC": 45, "EGYPT": 70, "HONG KONG": 20,
+    "HUNGARY": 45, "INDIA": 50, "INDONESIA": 65,
+    "ISRAEL": 30, "KUWAIT": 45, "MALAYSIA": 40, "MEXICO": 50,
+    "MOROCCO": 55, "PAKISTAN": 50, "PERU": 55, "PHILIPPINES": 70,
+    "POLAND": 45, "QATAR": 45, "RUSSIAN FEDERATION": 55,
+    "SAUDI ARABIA": 45, "SOUTH AFRICA": 55, "SOUTH KOREA": 35,
+    "TAIWAN": 30, "THAILAND": 45, "TURKEY": 50,
+    "UNITED ARAB EMIRATES": 45,
+}
+DEFAULT_TC_BPS: int = 55
 
 # Columns that must exist in the signal CSV (before derived columns)
 _REQUIRED_CSV_COLS: list[str] = [
