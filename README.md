@@ -23,12 +23,13 @@ This project constructs and evaluates a systematic multi-factor strategy for EM 
 
 ```
 EM/
-  data/                         Raw and processed data files
-    df_ds_signal.csv              Primary stock-month dataset (98,742 obs)
-    msci_em_index_price.xlsx      MSCI EM Index price data (benchmark)
-    eem_returns_monthly.csv       EEM ETF total returns (hedge instrument)
-    em_ff6_factors.csv            EM Fama-French 5 Factors + Momentum (Ken French)
-    us_ff6_factors.csv            US Fama-French 5 Factors + Momentum (Ken French)
+  data/                         Inputs required to run the notebooks (see DATA_DICTIONARY.md)
+    df_ds_signal.csv              Primary stock-month panel
+    msci_em_index_price.xlsx      MSCI EM index levels (benchmark)
+    eem_returns_monthly.csv       EEM ETF monthly total returns (hedge / benchmark)
+    em_ff6_factors.csv            EM FF5 + momentum factors (monthly)
+    us_ff6_factors.csv            US FF5 + momentum factors (monthly)
+    em_ff5.zip, em_mom.zip        Archived factor bundles (optional; CSVs above are canonical)
   src/                          Python modules (reusable packages)
     data_loader.py                Data loading, factor definitions, country TC map
     neutralization.py             Country-demean factor neutralization
@@ -74,17 +75,15 @@ EM/
     17_factor_model_oos.ipynb     OOS-only factor model analysis (2019-2024)
     18_enhanced_hedge_analysis.ipynb  Multi-window beta hedging & cumulative return comparison
     19_us_diversification_analysis.ipynb  US portfolio diversification value analysis
+    20_holdings_diagnostic.ipynb  Holdings-based diagnostic: 2023 crash, top/bottom stocks, CMA mystery
   output/
     csv/                        Intermediate and final result CSVs
     figures/                    All plots (PDF)
     latex/                      LaTeX tables
-  paper/
-    main.tex                    Detailed research paper (original)
-    main_v2.tex                 Comprehensive paper with all analyses
-    main_v3.tex                 Full comprehensive paper (94pp, all 97 figures, from scratch)
-    main_v4.tex                 Publishable-quality paper (67pp, 33 main-text figs, story-arc structure)
-    paper_academic.tex          Concise academic version (journal format)
-    references.bib              Bibliography
+  deliverables/                 PDFs and slide decks kept out of the repo root
+    papers/                     Written deliverables (PDF)
+    slides/                     Presentation decks (PPTX and PDF exports)
+  paper/                        LaTeX source for the long-form write-up (optional)
 ```
 
 ## Research Pipeline
@@ -109,6 +108,7 @@ EM/
 | 16. Factor Model (OOS) | 17 | 2019–2024 | OOS-only factor regressions, alpha comparison, annual sub-periods |
 | 17. Enhanced Hedging | 18 | 2019–2024 | Multi-window beta blending, cumulative returns, Sharpe comparison |
 | 18. US Diversification | 19 | 2019–2024 | US factor loadings, hurdle Sharpe/alpha, efficient frontier |
+| 19. Holdings Diagnostic | 20 | 2021–2025 | Stock-level holdings, 2023 crash diagnostic, CMA loading mystery |
 
 ## Factors
 
@@ -151,10 +151,6 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run notebooks in order: 01 through 19. Each notebook corresponds to one stage of the research pipeline. Key outputs are saved to `output/csv/` and `output/figures/`.
+Run notebooks in order: **01 through 20**. Each notebook corresponds to one stage of the research pipeline. Key outputs are saved to `output/csv/` and `output/figures/`.
 
-To compile the paper (comprehensive version):
-```bash
-cd paper
-pdflatex main_v3.tex && bibtex main_v3 && pdflatex main_v3.tex && pdflatex main_v3.tex
-```
+Column definitions and file-level notes for `data/` and major `output/csv/` artifacts are in `DATA_DICTIONARY.md`.

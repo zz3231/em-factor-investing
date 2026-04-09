@@ -142,3 +142,32 @@ DEFAULT_TC_BPS = 50  # for unlisted countries
 - Missing factor rates are low (<4% for momentum/volatility, <1% for others); imputed with industry-month median
 - Country-level TC estimates are from Domowitz et al. (2001) and are deliberately conservative
 - ADV computed as `share_turnover_t × prc × fx_rate / 21` (monthly volume ÷ 21 trading days, converted to USD)
+
+---
+
+## Holdings Diagnostic (NB20)
+
+### Output CSVs
+
+| File | Description |
+|------|-------------|
+| `nb20_stock_holdings.csv` | Reconstructed stock-month holdings panel (date, ric, name, country, industry, weight, return, composite score, factor values) |
+| `nb20_stock_contributions.csv` | Per-stock cumulative return contributions (total contribution, avg weight, months held, avg return) |
+| `nb20_2023_diagnostic.csv` | 2023 crash diagnostic summary (IC, industry attribution, hedge timing) |
+
+### Output Figures
+
+| Figure | Description |
+|--------|-------------|
+| `nb20_validation.pdf` | Holdings reconstruction validation vs known A_long returns |
+| `nb20_alpha_timeline.pdf` | Monthly hedged alpha, cumulative alpha, and active LO return |
+| `nb20_rolling_ic.pdf` | All6-EW composite IC over time and annual averages |
+| `nb20_industry_waterfall.pdf` | Industry contribution waterfall for the worst year |
+| `nb20_hedge_timing.pdf` | Rolling beta, hedge cost, and ideal vs actual beta |
+| `nb20_factor_regime.pdf` | EM factor returns by year and cumulative |
+| `nb20_stock_contributors.pdf` | Top 20 and bottom 20 stocks by return contribution |
+| `nb20_concentration.pdf` | Return concentration by country and industry |
+| `nb20_characteristics.pdf` | Factor characteristics of winners vs losers |
+| `nb20_cma_factor.pdf` | CMA factor cumulative returns and correlations |
+| `nb20_cma_decomposition.pdf` | CMA loading decomposition by single-factor portfolio |
+| `nb20_cma_rolling.pdf` | Rolling 24m CMA loading over time |
