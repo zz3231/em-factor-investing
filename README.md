@@ -20,15 +20,7 @@ This repository contains the full research pipeline for a systematic EM equity f
 - 2004–2008: Warmup (rolling windows, beta estimation)
 - 2009–2013: Factor construction selection (→ All6-EW)
 - 2014–2018: Portfolio construction selection (→ TO_MVO)
-- 2019–Mar 2025: True holdout for stock-level strategy outputs
-- Jan 2019–Sep 2024: Matched holdout window for EEM-based benchmark, hedge, and diversification comparisons
-
-## Deliverables
-
-- [Journal-style paper (PDF)](deliverables/papers/em_jpm_paper.pdf)
-- [Paper source (LaTeX)](paper/jpm_paper.tex)
-- [Presentation deck (PDF)](deliverables/slides/EM_Factor_Investing.pdf)
-- [Presentation deck (editable PPTX)](deliverables/slides/EM_Factor_Investing_Final.pptx)
+- 2019–2025: True holdout for stock-level strategy outputs
 
 ## Diversification Benefit
 
